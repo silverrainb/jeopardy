@@ -1,26 +1,5 @@
-// categories is the main data structure for the app; it looks like this:
-
-//  [
-//    { title: "Math",
-//      clues: [
-//        {question: "2+2", answer: 4, showing: null},
-//        {question: "1+1", answer: 2, showing: null}
-//        ...
-//      ],
-//    },
-//    { title: "Literature",
-//      clues: [
-//        {question: "Hamlet Author", answer: "Shakespeare", showing: null},
-//        {question: "Bell Jar Author", answer: "Plath", showing: null},
-//        ...
-//      ],
-//    },
-//    ...
-//  ]
-
-
-const categories = []
-const categoryObjArr = []
+const categories = [] // [id, id, id, id, id, id]
+const categoryObjArr = [] // [{title:"asdf", clues: [{question: "", answer:""},{}...]}, {}, {}, {}, {}, {} ]
 
 /** Get NUM_CATEGORIES random category from API.
  *
@@ -39,12 +18,13 @@ const getCategoryIds = new Promise((resolve, reject) => {
 // http://jservice.io/api/categories?count=1&offset=18413
     let randNum = getRandomInt(18413)
     // TODO What are the ways to make this request 6 times, in parallel?
+    // fetches category ids
     return axios.get(`http://jservice.io/api/categories?count=6&offset=${randNum}`)
         .then(function (res) {
             let data = res.data
             for (let i = 0; i < 6; i++) {
                 categories.push(data[i].id)
-                console.log("category ID 1 is ready")
+                console.log(`category ID ${i} is ready`)
             }
         }).then(function () {
             // TODO is there better way than using for loop?
@@ -56,6 +36,18 @@ const getCategoryIds = new Promise((resolve, reject) => {
             return Promise.all(promises)
             // TODO this should be in the setup section, but it just doesnt work!
         }).then(() => (fillTable()))
+        .then(() => {
+            $('td').on('click', function(e){
+                if(e.target.className.includes("null")){
+                    $(this).children('div:first').remove()
+                    $(this).children('div:first').removeClass("hidden")
+                }
+                else if(this.firstElementChild.className.includes("question")){
+                    $(this).children('div:first').remove()
+                    $(this).children('div:first').removeClass("hidden")
+                }
+            })
+        })
         .catch(function (e) {
             console.log(e);
         })
@@ -75,6 +67,7 @@ const getCategoryIds = new Promise((resolve, reject) => {
  */
 
 async function getCategory(catId) {
+    // produces categoryObjArr
     await axios.get(`http://jservice.io/api/category?id=${catId}`)
         .then((res) => {
             let data = res.data
@@ -186,16 +179,7 @@ async function setupAndStart() {
     //TODO how to make sure that the following runs after get Category IDs done? await doesn't do it.
     // await fillTable()
     // event handler
-    $('td').on('click', function(e){
-        if(e.target.className.includes("null")){
-            $(this).children('div:first').remove()
-            $(this).children('div:first').removeClass("hidden")
-        }
-        else if(this.firstElementChild.className.includes("question")){
-            $(this).children('div:first').remove()
-            $(this).children('div:first').removeClass("hidden")
-        }
-    })
+
 
 }
 

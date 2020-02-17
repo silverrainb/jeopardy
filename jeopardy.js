@@ -8,7 +8,6 @@ function getRandomInt(max) {
 const getCategoryIds = new Promise((resolve, reject) => {
 // http://jservice.io/api/categories?count=1&offset=18413
     let randNum = getRandomInt(18413)
-    // TODO What are the ways to make this request 6 times, in parallel?
     // fetches category ids
     return axios.get(`http://jservice.io/api/categories?count=6&offset=${randNum}`)
         .then(function (res) {
@@ -127,7 +126,7 @@ async function setupAndStart() {
     getCategoryIds
 }
 
-//TODO This runs as infinite loop! FIX IT
+//TODO This runs infinitely! FIX IT
 function restart() {
     // location.href = 'index.html';
 }

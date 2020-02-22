@@ -7,7 +7,7 @@ function getRandomInt(max) {
 
 async function getCategoryIds(){
     let randNum = getRandomInt(18413)
-    let res = await axios.get(`http://jservice.io/api/categories?count=6&offset=${randNum}`)
+    let res = await axios.get(`https://jservice.io/api/categories?count=6&offset=${randNum}`)
     let data = res.data
     for (let i = 0; i < 6; i++) {
         categories.push(data[i].id)
@@ -18,7 +18,7 @@ async function getCategoryIds(){
 
 async function getCategory(catId) {
     // produces categoryObjArr
-    let res = await axios.get(`http://jservice.io/api/category?id=${catId}`)
+    let res = await axios.get(`https://jservice.io/api/category?id=${catId}`)
     let data = res.data
     const { title, clues } = data
     const categoryObj = {

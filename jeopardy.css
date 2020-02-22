@@ -23,17 +23,30 @@ th {
 td {
   height: 9em;
   font-family: Copse, serif;
+  position: relative;
 }
 
 td:hover {
   cursor: pointer;
 }
 
-.null {
+.default {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 30px;
-  text-align: center;
 }
 
 .hidden {
   visibility: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+}
+
+.answer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

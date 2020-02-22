@@ -5,66 +5,40 @@ function getRandomInt(max) {
     return Math.floor(Math.random() * Math.floor(max));
 }
 
-const getCategoryIds = new Promise((resolve, reject) => {
-// http://jservice.io/api/categories?count=1&offset=18413
+async function getCategoryIds(){
     let randNum = getRandomInt(18413)
-    // fetches category ids
-    return axios.get(`http://jservice.io/api/categories?count=6&offset=${randNum}`)
-        .then(function (res) {
-            let data = res.data
-            for (let i = 0; i < 6; i++) {
-                categories.push(data[i].id)
-            }
-        })
-        .then(function () {
-            let promises = []
-            for (let i = 0; i < 6; i++) {
-                promises.push(getCategory(categories[i]))
-            }
-            return Promise.all(promises)
-        })
-        .then(() => (fillTable()))
-        .then(() => {
-            $('td').on('click', function(e){
-                if(e.target.className.includes("null")){
-                    $(this).children('div:first').remove()
-                    $(this).children('div:first').removeClass("hidden")
-                }
-                else if(this.firstElementChild.className.includes("question")){
-                    $(this).children('div:first').remove()
-                    $(this).children('div:first').removeClass("hidden")
-                }
-            })
-        })
-        .catch(function (e) {
-            console.log(e);
-        })
-})
-
+    let res = await axios.get(`http://jservice.io/api/categories?count=6&offset=${randNum}`)
+    let data = res.data
+    for (let i = 0; i < 6; i++) {
+        categories.push(data[i].id)
+        console.log(`category ID ${i} is ready`)
+    }
+    return categories
+}
 
 async function getCategory(catId) {
     // produces categoryObjArr
-    await axios.get(`http://jservice.io/api/category?id=${catId}`)
-        .then((res) => {
-            let data = res.data
-            const {title, clues} = data
-            let categoryObj = {
-                title,
-                clues
-            }
-            categoryObjArr.push(categoryObj)
-            console.log('categoryObjArr READY')
-        })
-        .catch((e) => {
-            console.log(e);
-        })
+    let res = await axios.get(`http://jservice.io/api/category?id=${catId}`)
+    let data = res.data
+    const { title, clues } = data
+    const categoryObj = {
+        title,
+        clues
+    }
+    return categoryObj
 }
 
+async function getCategoryObjArr(){
+    for (let i = 0; i < 6; i++) {
+        categoryObjArr.push(await getCategory(categories[i]))
+        console.log(`categoryObjArr ${i} is ready`)
+    }
+    return categoryObjArr
+}
 
-function fillTable() {
+function createTable(){
     const $categoryRow = $("thead")
     const $body = $("tbody")
-
     $categoryRow.empty();
 
     function createHead(){
@@ -78,7 +52,7 @@ function fillTable() {
     function createRows(){
         let row = ""
         for(let i=0; i<6; i++){
-            row += "<td><div class='null'>?</div><div class='question hidden'></div><div class='answer hidden'></div></td>"
+            row += "<td><div class='default'>?</div><div class='question hidden'></div><div class='answer hidden'></div></td>"
         }
         return `<tr>${row}</tr>`
     }
@@ -86,62 +60,83 @@ function fillTable() {
     let $item = $(`${createHead()}`)
     $categoryRow.append($item)
 
+    // Fill Head with Categories
+    fillHead()
+
     let $cover = $(`${createRows()}${createRows()}${createRows()}${createRows()}${createRows()}`)
     $body.append($cover)
+}
 
-    // Fill Table Head with Category
-    function fillHead(){
-        let ths = document.querySelectorAll('th')
-        for (let i = 0; i < ths.length; i++) {
-            ths[i].innerHTML = categoryObjArr[i].title
-        }
+function fillHead(){
+    // Fill Head Category
+    let ths = document.querySelectorAll('th')
+    console.log(ths)
+    for (let i = 0; i < ths.length; i++) {
+        ths[i].innerHTML =  categoryObjArr[i].title
     }
-    // Fill Questions
-    function fillQuestions(col){
-        let columnCells = document.querySelectorAll(`tbody td:nth-child(${col})`);
-        for (let i = 0; i < columnCells.length; i++) {
-            columnCells[i].children[1].innerHTML = categoryObjArr[col-1].clues[i].question
-        }
-    }
-    // Fill Answers
-    function fillAnswers(col){
-        let columnCells = document.querySelectorAll(`tbody td:nth-child(${col})`);
-        for (let i = 0; i < columnCells.length; i++) {
-            columnCells[i].children[2].innerHTML = categoryObjArr[col-1].clues[i].answer
-        }
-    }
-    // fill All Contents
-    function fillContents(){
-        fillHead()
-        for(let i=1; i<=6; i++){
-            fillQuestions(i)
-            fillAnswers(i)
-        }
-    }
+}
 
+// Fill Questions
+function fillQuestions(col){
+    let columnCells = document.querySelectorAll(`tbody td:nth-child(${col})`);
+    for (let i = 0; i < columnCells.length; i++) {
+        columnCells[i].children[1].innerHTML =  categoryObjArr[col-1].clues[i].question
+    }
+}
+
+// Fill Answers
+function fillAnswers(col){
+    let columnCells = document.querySelectorAll(`tbody td:nth-child(${col})`);
+    for (let i = 0; i < columnCells.length; i++) {
+        columnCells[i].children[2].innerHTML =  categoryObjArr[col-1].clues[i].answer
+    }
+}
+
+function fillContents(){
+    // fillHead()
+    for(let i=1; i<=6; i++){
+        fillQuestions(i)
+        fillAnswers(i)
+    }
+}
+
+function fillTable() {
+    createTable()
     fillContents()
 }
 
-async function setupAndStart() {
-    getCategoryIds
+function handler(e){
+    console.log("clicked td!")
+    if(e.target.className.includes("default")){
+        $(this).children('div:first').remove()
+        $(this).children('div:first').removeClass("hidden")
+    }
+    else if(this.firstElementChild.className.includes("question")){
+        $(this).children('div:first').remove()
+        $(this).children('div:first').removeClass("hidden")
+    }
 }
 
-//TODO This runs infinitely! FIX IT
+async function setup(){
+    // fill categories with ids
+    await getCategoryIds()
+    // fill categoryObjArr with data
+    await getCategoryObjArr()
+    // fill table and contents
+    await fillTable()
+    // // add handler
+    $('td').on('click', handler)
+}
+
+/** On click of restart button, restart game. */
 function restart() {
-    // location.href = 'index.html';
+    location.href = 'index.html';
 }
-
-// $('#restart').addEventListener('click', restart())
-
 
 /** On page load, setup and start & add event handler for clicking clues */
 $(document).ready(function () {
     // start
-    setupAndStart();
-
-
+    setup()
     // restart
-    $('#restart').on('click', function () {
-        location.href = 'index.html';
-    })
+    $('#restart').on('click', restart)
 })
